@@ -1,11 +1,6 @@
-function [I,A2,padlength,angle,displ,cnfdc] = f_main_symaxes(I,sigma,outerangles,innerangles,inndstres,innerdistsfactors,noutputs,proxthr)
+function A = f_main_symaxes(I,accwidth,sigma,outerangles,innerangles,inndstres,innerdistsfactors,sqvotes)
 
 % I should be double, in [0,1]
-if size(I,3) > 1
-    I = double(rgb2gray(I))/255;
-else
-    I = double(I)/255;
-end
 freq = 1/sigma;
 
 maxdim = max(size(I));
@@ -17,8 +12,7 @@ I = fadeinandout(I,20);
 I0 = I;
 I = padimage(I,padlength,'real','');
 
-accwidth = 2*round(sqrt(size(I,1)^2+size(I,2)^2)); % displacement
-accheight = length(outerangles); % angle
+accheight = length(outerangles);
 A = zeros(accheight,accwidth);
 
 [Unique0piAngles,UniqueAngIndices,UniqueAngSigns] = uniqueangles(outerangles,innerangles);
@@ -29,10 +23,9 @@ for i = 1:length(Unique0piAngles)
 end
 
 % X: lines, Y: columns
-[Y,X] = meshgrid(1:size(I,2),1:size(I,1));
-h = waitbar(0,'computing...');
+[Y,X] = meshgrid(1:size(I0,2),1:size(I0,1));
 for oai = 1:length(outerangles)
-    waitbar(oai/length(outerangles),h,'computing...')
+%     fprintf('.');
     AccOut = complex(zeros(size(I)));
     outerangle = outerangles(oai);
     for idi = 1:length(innerdists)
@@ -59,9 +52,12 @@ for oai = 1:length(outerangles)
         end
     end
 
-    T = AccOut.*conj(AccOut);
-    
-    AStep = zeros(size(A));
+    if sqvotes
+        T = AccOut.*conj(AccOut);
+    else
+        T = abs(AccOut);
+    end
+    T = T(padlength+1:padlength+size(I0,1),padlength+1:padlength+size(I0,2));
     
     LocDispl = locdispl(outerangle,X,Y,accwidth);
     for i = 1:size(T,1)
@@ -74,22 +70,17 @@ for oai = 1:length(outerangles)
             f01 = [f0 f1];
             for k = 1:2
                 c = max(min(c01(k),accwidth),1);
-                AStep(oai,c) = AStep(oai,c)+f01(k)*T(i,j);
+                A(oai,c) = A(oai,c)+f01(k)*T(i,j);
             end
         end
     end
-    
-    A = A+AStep;
 end
-close(h)
+% fprintf('\n');
 
 for i = 1:size(A,1)
     A(i,:) = smooth(A(i,:));
 end
 
 A = normalize(A);
-[angle,displ,cnfdc,iangle,idispl] = locmaxacc(A,outerangles,accwidth,noutputs,proxthr);
-
-A2 = displayacc(A,iangle,idispl);
 
 end

@@ -1,7 +1,7 @@
-function [Out,Out1,Out2] = symconv(Conv1,Conv2,sigma,outerangle,innerdist)
+function [Out,Out1,Out2] = symconv2(Conv1,Conv2,sigma,outerangle,innerdist)
 
-O1T = normalize(Conv1.*conj(Conv1));
-O2T = normalize(Conv2.*conj(Conv2));
+O1T = Conv1;
+O2T = Conv2;
 
 support = 2.5*sigma; % same as in cmorlet.m
 r = round(innerdist/2+support);
@@ -28,7 +28,7 @@ O2 = Conv2(r0:r1,c0:c1);
 Out2 = zeros(nr,nc);
 Out2(r0:r1,c0:c1) = O2T(r0:r1,c0:c1);
 
-O12 = O1.*conj(O2);
+O12 = exp(-(O1-O2).^2);
 % O12 = conv2(O12,qkernel,'same');
 % imshow(normalize(abs(O12)))
 % pause

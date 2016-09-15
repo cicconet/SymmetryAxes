@@ -1,4 +1,4 @@
 # SymmetryAxes
 Likelihood model for symmetry axes location.
 
-Main file: main_symaxes.m
+Main files: main_symaxes.m, main_ellcenlik.m
